@@ -14,7 +14,7 @@
     "version": "Lua 5.4"
   },
   "workspace": {
-    "library": ["~/.local/share/nvim/lazy/wezterm-types/lua"],
+    "library": ["lua54/share/lua/5.4", "lua54/share/lua/5.4/wezterm/types"],
     "checkThirdParty": false,
     "ignoreDir": ["/lua"]
   }

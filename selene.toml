@@ -1,6 +1,1 @@
-# WezTerm runs Lua 5.4. This selene build (v0.31.0) bundles std libraries up to
-# lua53 but emits a spurious build-feature error for them, so we use `lua51` — the
-# one std this binary loads cleanly. It fully covers what this plugin uses (no
-# Lua 5.2+ globals are referenced here). If you reinstall selene with the lua52/53
-# features enabled, switch this to `lua53` (closest bundled std to 5.4).
 std = "lua54"
