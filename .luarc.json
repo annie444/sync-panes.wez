@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/LuaLS/vscode-lua/master/setting/schema.json",
+  "codeLens": {
+    "enable": true
+  },
+  "hint": {
+    "enable": true,
+    "arrayIndex": "Disable",
+    "semicolon": "Disable"
+  },
+  "runtime": {
+    "path": ["?.lua", "?/init.lua"],
+    "pathStrict": true,
+    "version": "Lua 5.4"
+  },
+  "workspace": {
+    "library": ["~/.local/share/nvim/lazy/wezterm-types/lua"],
+    "checkThirdParty": false,
+    "ignoreDir": ["/lua"]
+  }
+}
