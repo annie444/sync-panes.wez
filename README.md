@@ -54,15 +54,15 @@ bar and every key you type is sent to all panes in the tab.
 Pass an options table as the second argument to `apply_to_config`. Every field
 is optional and falls back to the default below.
 
-| Option                 | Default              | Description                                                                                  |
-| ---------------------- | -------------------- | -------------------------------------------------------------------------------------------- |
-| `key_table_name`       | `"synchronize_panes"`| Name of the key table the plugin generates.                                                  |
-| `toggle_key`           | `"E"`                | Key that toggles synchronization.                                                            |
-| `toggle_mods`          | `"CTRL\|SHIFT"`      | Modifiers for the toggle key. Must not collide with a mirrored key (see [Caveats](#caveats)).|
-| `indicator`            | `true`               | Show the right-status indicator while sync is active. Set `false` to manage it yourself.     |
-| `status_text`          | `"⟳ SYNC"`           | Text shown in the indicator.                                                                  |
-| `indicator_ansi_color` | `"Red"`              | ANSI color name for the indicator text.                                                       |
-| `backspace`            | `"\127"`             | Byte(s) sent for Backspace. `0x7f` (DEL) is the common default; use `"\8"` for `^H`.         |
+| Option                 | Default               | Description                                                                                   |
+| ---------------------- | --------------------- | --------------------------------------------------------------------------------------------- |
+| `key_table_name`       | `"synchronize_panes"` | Name of the key table the plugin generates.                                                   |
+| `toggle_key`           | `"E"`                 | Key that toggles synchronization.                                                             |
+| `toggle_mods`          | `"CTRL\|SHIFT"`       | Modifiers for the toggle key. Must not collide with a mirrored key (see [Caveats](#caveats)). |
+| `indicator`            | `true`                | Show the right-status indicator while sync is active. Set `false` to manage it yourself.      |
+| `status_text`          | `"⟳ SYNC"`            | Text shown in the indicator.                                                                  |
+| `indicator_ansi_color` | `"Red"`               | ANSI color name for the indicator text.                                                       |
+| `backspace`            | `"\127"`              | Byte(s) sent for Backspace. `0x7f` (DEL) is the common default; use `"\8"` for `^H`.          |
 
 ### Example
 
@@ -83,7 +83,7 @@ sync.apply_to_config(config, {
 - While active, anything you type is sent to every pane in the active tab,
   including the pane you're typing in (so there's no double input).
 - Control sequences are broadcast too: pressing **`Ctrl+C`** while synced sends
-  an interrupt to *all* panes at once.
+  an interrupt to _all_ panes at once.
 
 ## API
 
@@ -126,17 +126,17 @@ table.insert(config.keys, {
 ## Caveats
 
 - **Toggle key must not be a mirrored key.** The key that toggles sync has to
-  fall *through* the active key table rather than being broadcast. `CTRL|SHIFT`
+  fall _through_ the active key table rather than being broadcast. `CTRL|SHIFT`
   combinations are never mirrored, which is why the default `CTRL+SHIFT+E` works.
   If you pick a different combination, make sure it isn't one of the broadcast
   keys.
 - **Arrow keys use normal cursor mode.** Navigation keys are sent as
-  *normal*-mode (not application-mode) cursor sequences. Full-screen TUIs that
+  _normal_-mode (not application-mode) cursor sequences. Full-screen TUIs that
   switch the terminal into application cursor mode may receive different bytes
   than they expect for the arrow keys.
-- **Backspace defaults to DEL (`0x7f`).** This matches most terminals. If your
-  environment expects `^H`, set `backspace = "\8"`.
+- **Backspace defaults to DEL (`0x7f`).** This matches the behavior of the latest
+  WezTerm release. If you're running an older version, set `backspace = "\8"`.
 
 ## License
 
-MIT.
+[MIT](./LICENSE)
