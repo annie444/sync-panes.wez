@@ -116,19 +116,28 @@ local function broadcast(text)
 	end)
 end
 
+---@param source ClipboardPasteDestination
+local function broadcast_paste(source)
+	return wezterm.action_callback(function(window, _)
+		local tab = window:active_tab()
+		if not tab then
+			return
+		end
+		for _, p in ipairs(tab:panes()) do
+			window:perform_action(act.PasteFrom(source), p)
+		end
+	end)
+end
+
 -- ---------------------------------------------------------------------------
 -- Key table generation
 -- ---------------------------------------------------------------------------
 
----@class SyncPanesKeyBinding
----@field key string
----@field mods string|nil
----@field action { EmitEvent: string }
-
 ---@param cfg SyncPanesConfig
----@return SyncPanesKeyBinding[]
-local function build_key_table(cfg)
-	---@type SyncPanesKeyBinding[]
+---@param keys Key[]
+---@return Key[]
+local function build_key_table(cfg, keys)
+	---@type Key[]
 	local t = {}
 
 	---@param key string
@@ -198,6 +207,97 @@ local function build_key_table(cfg)
 		add(k, nil, seq)
 	end
 
+	--- Track which of the default clipboard-related bindings are overridden by
+	--- the user's config, so we can avoid overriding them with our own
+	--- broadcast versions.
+	---@type table<string, boolean>
+	local default_clips_override = {
+		super_c = true,
+		super_v = true,
+		ctrlsh_c = true,
+		ctrlsh_v = true,
+		Copy = true,
+		Paste = true,
+		ctrl_Insert = true,
+		sh_Insert = true,
+	}
+
+	---@type table<string, Key>
+	local clips_keys = {
+		super_c = { key = "c", mods = "SUPER", action = act.CopyTo("Clipboard") },
+		super_v = { key = "v", mods = "SUPER", action = broadcast_paste("Clipboard") },
+		ctrlsh_c = { key = "c", mods = "CTRL|SHIFT", action = act.CopyTo("Clipboard") },
+		ctrlsh_v = { key = "v", mods = "CTRL|SHIFT", action = broadcast_paste("Clipboard") },
+		Copy = { key = "Copy", action = act.CopyTo("Clipboard") },
+		Paste = { key = "Paste", action = broadcast_paste("Clipboard") },
+		ctrl_Insert = { key = "Insert", mods = "CTRL", action = act.CopyTo("PrimarySelection") },
+		sh_Insert = { key = "Insert", mods = "SHIFT", action = broadcast_paste("PrimarySelection") },
+	}
+
+	--- Lookup tables for keys that trigger clipboard actions, so we can detect when
+	--- the user has overridden them in their config and avoid adding our own bindings
+	--- that would conflict.
+	local c_keys = {
+		["c"] = true,
+		["C"] = true,
+		["mapped:c"] = true,
+		["mapped:C"] = true,
+		["phys:c"] = true,
+		["phys:C"] = true,
+		["raw:c"] = true,
+		["raw:C"] = true,
+	}
+	local v_keys = {
+		["v"] = true,
+		["V"] = true,
+		["mapped:v"] = true,
+		["mapped:V"] = true,
+		["phys:v"] = true,
+		["phys:V"] = true,
+		["raw:v"] = true,
+		["raw:V"] = true,
+	}
+	local ctrlsh_keys = {
+		["CTRL|SHIFT"] = true,
+		["SHIFT|CTRL"] = true,
+	}
+
+	for _, k in ipairs(keys) do
+		if k.action["PasteFrom"] ~= nil then
+			-- Capture PasteFrom bindings to mirror the paste action, rather than the literal
+			-- chars sent by the source key (e.g. Ctrl+Shift+V). This allows users to maintain a single
+			-- paste binding in their config and have it work both inside and outside of synchronize-panes mode,
+			-- without having to worry about the underlying byte sequences or key combinations.
+			t[#t + 1] = { key = k.key, mods = k.mods, action = broadcast_paste(k.action.PasteFrom) }
+		elseif k.action["CopyTo"] ~= nil then
+			-- Allow passthrough of existing CopyTo bindings, which are common in
+			-- user configs and should not be mirrored.
+			t[#t + 1] = { key = k.key, mods = k.mods, action = act.CopyTo(k.action.CopyTo) }
+		elseif c_keys[k.key] and k.mods == "SUPER" then
+			default_clips_override.super_c = false
+		elseif v_keys[k.key] and k.mods == "SUPER" then
+			default_clips_override.super_v = false
+		elseif c_keys[k.key] and ctrlsh_keys[k.mods] then
+			default_clips_override.ctrlsh_c = false
+		elseif v_keys[k.key] and ctrlsh_keys[k.mods] then
+			default_clips_override.ctrlsh_v = false
+		elseif k.key == "Copy" and (k.mods == nil or k.mods == "") then
+			default_clips_override.Copy = false
+		elseif k.key == "Paste" and (k.mods == nil or k.mods == "") then
+			default_clips_override.Paste = false
+		elseif k.key == "Insert" and k.mods == "CTRL" then
+			default_clips_override.ctrl_Insert = false
+		elseif k.key == "Insert" and k.mods == "SHIFT" then
+			default_clips_override.sh_Insert = false
+		end
+	end
+
+	for type, enabled in pairs(default_clips_override) do
+		if enabled then
+			t[#t + 1] = clips_keys[type]
+		end
+	end
+
 	return t
 end
 
@@ -214,11 +314,12 @@ local function update_status(window)
 	if is_enabled(window:window_id()) then
 		window:set_right_status(wezterm.format({
 			{ Foreground = { AnsiColor = cfg.indicator_ansi_color or "Red" } },
+			---@diagnostic disable-next-line: missing-fields
 			{ Attribute = { Intensity = "Bold" } },
 			{ Text = " " .. cfg.status_text .. " " },
 		}))
 	else
-		window:set_right_status("")
+		wezterm.emit("update-right-status")
 	end
 end
 
@@ -286,9 +387,9 @@ function M.apply_to_config(config, opts)
 	M._cfg = cfg
 
 	config.key_tables = config.key_tables or {}
-	config.key_tables[cfg.key_table_name] = build_key_table(cfg)
-
 	config.keys = config.keys or {}
+	config.key_tables[cfg.key_table_name] = build_key_table(cfg, config.keys)
+
 	table.insert(config.keys, {
 		key = cfg.toggle_key,
 		mods = cfg.toggle_mods,
