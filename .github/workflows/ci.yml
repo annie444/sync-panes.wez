@@ -36,7 +36,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Lint with selene
-        uses: NTBBloodbath/selene-action@v1
+        uses: NTBBloodbath/selene-action@v1.0.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           args: plugin
