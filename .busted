@@ -1,0 +1,11 @@
+-- busted configuration -- https://lunarmodules.github.io/busted/
+return {
+	default = {
+		ROOT = { "spec" },
+		pattern = "_spec%.lua$",
+		-- Resolve `require("spec.mock_wezterm")` and dofile("plugin/init.lua")
+		-- relative to the project root (busted's working directory).
+		lpath = "./?.lua;./?/init.lua",
+		verbose = true,
+	},
+}

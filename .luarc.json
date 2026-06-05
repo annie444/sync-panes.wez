@@ -14,7 +14,12 @@
     "version": "Lua 5.4"
   },
   "workspace": {
-    "library": ["lua54/share/lua/5.4", "lua54/share/lua/5.4/wezterm/types"],
+    "library": [
+      "lua54/share/lua/5.4",
+      "lua54/share/lua/5.4/wezterm/types",
+      "lua54/share/lua/5.4/busted",
+      "lua54/share/lua/5.4/luassert"
+    ],
     "checkThirdParty": false,
     "ignoreDir": ["/lua"]
   }

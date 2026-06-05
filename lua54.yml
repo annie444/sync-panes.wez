@@ -1,0 +1,10 @@
+---
+base: lua53
+name: lua54
+globals:
+  warn:
+    args:
+      - type: "..."
+  coroutine.close:
+    args:
+      - type: any

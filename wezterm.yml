@@ -1,0 +1,53 @@
+---
+name: wezterm
+globals:
+  wezterm:
+    any: true
+  describe:
+    args:
+      - type: string
+        required: true
+      - type: function
+        required: true
+  it:
+    args:
+      - type: string
+        required: true
+      - type: function
+        required: true
+  assert.is_not_nil:
+    args:
+      - type: any
+        required: true
+  assert.equal:
+    args:
+      - type: any
+        required: true
+      - type: any
+        required: true
+  assert.is_table:
+    args:
+      - type: any
+        required: true
+  assert.is_true:
+    args:
+      - type: any
+        required: true
+  assert.same:
+    args:
+      - type: any
+        required: true
+      - type: any
+        required: true
+  assert.has_no.errors:
+    args:
+      - type: function
+        required: true
+  assert.is_nil:
+    args:
+      - type: any
+        required: true
+  assert.is_false:
+     args:
+      - type: any
+        required: true
