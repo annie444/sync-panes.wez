@@ -26,10 +26,10 @@
 ---@field toggle_mods string
 ---@field indicator boolean
 ---@field status_text string
----@field indicator_ansi_color string
+---@field indicator_color string
 ---@field backspace string
 ---@field border boolean
----@field border_ansi_color string
+---@field border_color string
 
 ---@class SyncPanesConfigBuilder
 ---@field key_table_name string?
@@ -37,10 +37,10 @@
 ---@field toggle_mods string?
 ---@field indicator boolean?
 ---@field status_text string?
----@field indicator_ansi_color string?
+---@field indicator_color string?
 ---@field backspace string?
 ---@field border boolean?
----@field border_ansi_color string?
+---@field border_color string?
 
 ---@type Wezterm
 local wezterm = require("wezterm")
@@ -49,9 +49,10 @@ local act = wezterm.action
 ---@class SyncPanesPlugin
 ---@field _cfg SyncPanesConfig?
 ---@field _win_frame WindowFrameConfig?
+---@field _split string?
 ---@field toggle { EmitEvent: string }
 ---@field is_synced fun(window: Window): boolean
----@field apply_to_config fun(config: Config, opts: SyncPanesConfigBuilder|nil): Config
+---@field apply_to_config fun(config: Config, opts: SyncPanesConfigBuilder?): Config
 local M = {}
 
 -- M._cfg is populated by apply_to_config and read at runtime by the toggle
@@ -61,6 +62,10 @@ M._cfg = nil
 -- M._win_frame is used to track the current window frame for status updates, so we
 -- can trigger a refresh when the border color needs to change.
 M._win_frame = nil
+
+--- M._split is used to track the current split color for status updates, so we can
+--- trigger a refresh when the border color needs to change.
+M._split = nil
 
 ---@type SyncPanesConfig
 local default_config = {
@@ -75,10 +80,10 @@ local default_config = {
 	-- maintain your own status bar (then use M.is_synced(window) to integrate).
 	indicator = true,
 	status_text = "⟳ SYNC",
-	indicator_ansi_color = "Red",
+	indicator_color = "Red",
 	-- Changed the boarder color of the panes while sync is active.
 	border = false,
-	border_ansi_color = "Red",
+	border_color = "Red",
 	-- Byte(s) sent for Backspace. 0x7f (DEL) is the common terminal default;
 	-- set to "\8" if your environment expects ^H.
 	backspace = "\127",
@@ -153,7 +158,7 @@ local function build_key_table(cfg, keys)
 	local t = {}
 
 	---@param key string
-	---@param mods string|nil
+	---@param mods string?
 	---@param text string
 	local function add(key, mods, text)
 		t[#t + 1] = { key = key, mods = mods, action = broadcast(text) }
@@ -287,20 +292,28 @@ local function build_key_table(cfg, keys)
 			t[#t + 1] = { key = k.key, mods = k.mods, action = act.CopyTo(k.action.CopyTo) }
 		elseif c_keys[k.key] and k.mods == "SUPER" then
 			default_clips_override.super_c = false
+			t[#t + 1] = k
 		elseif v_keys[k.key] and k.mods == "SUPER" then
 			default_clips_override.super_v = false
+			t[#t + 1] = k
 		elseif c_keys[k.key] and ctrlsh_keys[k.mods] then
 			default_clips_override.ctrlsh_c = false
+			t[#t + 1] = k
 		elseif v_keys[k.key] and ctrlsh_keys[k.mods] then
 			default_clips_override.ctrlsh_v = false
+			t[#t + 1] = k
 		elseif k.key == "Copy" and (k.mods == nil or k.mods == "") then
 			default_clips_override.Copy = false
+			t[#t + 1] = k
 		elseif k.key == "Paste" and (k.mods == nil or k.mods == "") then
 			default_clips_override.Paste = false
+			t[#t + 1] = k
 		elseif k.key == "Insert" and k.mods == "CTRL" then
 			default_clips_override.ctrl_Insert = false
+			t[#t + 1] = k
 		elseif k.key == "Insert" and k.mods == "SHIFT" then
 			default_clips_override.sh_Insert = false
+			t[#t + 1] = k
 		end
 	end
 
@@ -325,7 +338,7 @@ local function update_status_bar(window)
 	end
 	if is_enabled(window:window_id()) then
 		window:set_right_status(wezterm.format({
-			{ Foreground = { AnsiColor = cfg.indicator_ansi_color or "Red" } },
+			{ Foreground = { AnsiColor = cfg.indicator_color or "Red" } },
 			---@diagnostic disable-next-line: missing-fields
 			{ Attribute = { Intensity = "Bold" } },
 			{ Text = " " .. cfg.status_text .. " " },
@@ -342,17 +355,29 @@ local function update_status_border(window)
 		return
 	end
 	if is_enabled(window:window_id()) then
-		M._win_frame = window:effective_config().window_frame
+		local run_cfg = window:effective_config()
+		M._win_frame = run_cfg.window_frame
+		M._split = run_cfg.colors.split or ""
 		window:set_config_overrides({
+			colors = {
+				split = cfg.border_color or "Red",
+			},
 			window_frame = {
-				border_left_color = cfg.border_ansi_color,
-				border_right_color = cfg.border_ansi_color,
-				border_bottom_color = cfg.border_ansi_color,
-				border_top_color = cfg.border_ansi_color,
+				border_left_color = cfg.border_color or "Red",
+				border_right_color = cfg.border_color or "Red",
+				border_bottom_color = cfg.border_color or "Red",
+				border_top_color = cfg.border_color or "Red",
+				border_left_width = M._win_frame.border_left_width or "0.5cell",
+				border_right_width = M._win_frame.border_right_width or "0.5cell",
+				border_bottom_height = M._win_frame.border_bottom_height or "0.25cell",
+				border_top_height = M._win_frame.border_top_height or "0.25cell",
 			},
 		})
 	else
 		window:set_config_overrides({
+			colors = {
+				split = M._split,
+			},
 			window_frame = M._win_frame,
 		})
 	end
@@ -406,7 +431,7 @@ wezterm.on("update-status", function(window, _)
 end)
 
 ---@param config Config
----@param opts SyncPanesConfigBuilder|nil
+---@param opts SyncPanesConfigBuilder?
 ---@return Config
 function M.apply_to_config(config, opts)
 	---@cast opts SyncPanesConfigBuilder
