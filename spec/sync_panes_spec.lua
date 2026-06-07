@@ -5,7 +5,7 @@
 local mock = require("spec.mock_wezterm")
 
 -- Name of the key table the plugin generates (matches default_config).
-local KT = "synchronize_panes"
+local KT = "sync_mode"
 
 describe("sync-panes.wez", function()
 	describe("apply_to_config", function()
