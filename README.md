@@ -10,13 +10,15 @@ it on, type once, and the same input lands in all panes at the same time.
   `CTRL+SHIFT+E`).
 - **Status indicator** — an optional `⟳ SYNC` badge in the right status bar
   while sync is active.
+- **Border highlight** — optionally recolor the window border while sync is
+  active for a second, hard-to-miss visual cue.
 - **Broadcasts everything you'd expect** — printable characters, `Ctrl`/`Alt`
   combinations, `Enter`/`Tab`/`Backspace`/`Escape`, arrow & navigation keys, and
   `F1`–`F12`.
 - **Survives config reloads** — enabled state is stored in `wezterm.GLOBAL`, so
   reloading your config won't drop you out of sync mode.
 - **Configurable** — change the toggle key, key-table name, indicator text and
-  color, and the Backspace byte.
+  color, the border highlight color, and the Backspace byte.
 
 ## Requirements
 
@@ -62,6 +64,8 @@ is optional and falls back to the default below.
 | `indicator`            | `true`                | Show the right-status indicator while sync is active. Set `false` to manage it yourself.      |
 | `status_text`          | `"⟳ SYNC"`            | Text shown in the indicator.                                                                  |
 | `indicator_ansi_color` | `"Red"`               | ANSI color name for the indicator text.                                                       |
+| `border`               | `false`               | Recolor the window border while sync is active. Set `true` to enable the highlight.           |
+| `border_ansi_color`    | `"Red"`               | ANSI color name for the border while sync is active (used when `border = true`).              |
 | `backspace`            | `"\127"`              | Byte(s) sent for Backspace. `0x7f` (DEL) is the common default; use `"\8"` for `^H`.          |
 
 ### Example
@@ -72,6 +76,8 @@ sync.apply_to_config(config, {
   toggle_mods = "CTRL|SHIFT",
   status_text = "BROADCAST",
   indicator_ansi_color = "Yellow",
+  border = true,
+  border_ansi_color = "Yellow",
 })
 ```
 
