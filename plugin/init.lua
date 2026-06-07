@@ -28,22 +28,27 @@
 ---@field status_text string
 ---@field indicator_ansi_color string
 ---@field backspace string
+---@field border boolean
+---@field border_ansi_color string
 
 ---@class SyncPanesConfigBuilder
----@field key_table_name string|nil
----@field toggle_key string|nil
----@field toggle_mods string|nil
----@field indicator boolean|nil
----@field status_text string|nil
----@field indicator_ansi_color string|nil
----@field backspace string|nil
+---@field key_table_name string?
+---@field toggle_key string?
+---@field toggle_mods string?
+---@field indicator boolean?
+---@field status_text string?
+---@field indicator_ansi_color string?
+---@field backspace string?
+---@field border boolean?
+---@field border_ansi_color string?
 
 ---@type Wezterm
 local wezterm = require("wezterm")
 local act = wezterm.action
 
 ---@class SyncPanesPlugin
----@field _cfg SyncPanesConfig|nil
+---@field _cfg SyncPanesConfig?
+---@field _win_frame WindowFrameConfig?
 ---@field toggle { EmitEvent: string }
 ---@field is_synced fun(window: Window): boolean
 ---@field apply_to_config fun(config: Config, opts: SyncPanesConfigBuilder|nil): Config
@@ -52,6 +57,10 @@ local M = {}
 -- M._cfg is populated by apply_to_config and read at runtime by the toggle
 -- action and the status handler (both of which are created once at load time).
 M._cfg = nil
+
+-- M._win_frame is used to track the current window frame for status updates, so we
+-- can trigger a refresh when the border color needs to change.
+M._win_frame = nil
 
 ---@type SyncPanesConfig
 local default_config = {
@@ -67,6 +76,9 @@ local default_config = {
 	indicator = true,
 	status_text = "⟳ SYNC",
 	indicator_ansi_color = "Red",
+	-- Changed the boarder color of the panes while sync is active.
+	border = false,
+	border_ansi_color = "Red",
 	-- Byte(s) sent for Backspace. 0x7f (DEL) is the common terminal default;
 	-- set to "\8" if your environment expects ^H.
 	backspace = "\127",
@@ -302,11 +314,11 @@ local function build_key_table(cfg, keys)
 end
 
 -- ---------------------------------------------------------------------------
--- Status indicator
+-- Status indicators
 -- ---------------------------------------------------------------------------
 
 ---@param window Window
-local function update_status(window)
+local function update_status_bar(window)
 	local cfg = M._cfg
 	if not cfg or not cfg.indicator then
 		return
@@ -320,6 +332,29 @@ local function update_status(window)
 		}))
 	else
 		wezterm.emit("update-right-status")
+	end
+end
+
+---@param window Window
+local function update_status_border(window)
+	local cfg = M._cfg
+	if not cfg or not cfg.border then
+		return
+	end
+	if is_enabled(window:window_id()) then
+		M._win_frame = window:effective_config().window_frame
+		window:set_config_overrides({
+			window_frame = {
+				border_left_color = cfg.border_ansi_color,
+				border_right_color = cfg.border_ansi_color,
+				border_bottom_color = cfg.border_ansi_color,
+				border_top_color = cfg.border_ansi_color,
+			},
+		})
+	else
+		window:set_config_overrides({
+			window_frame = M._win_frame,
+		})
 	end
 end
 
@@ -348,7 +383,8 @@ M.toggle = wezterm.action_callback(function(window, pane)
 		window:perform_action("PopKeyTable", pane)
 	end
 
-	update_status(window)
+	update_status_bar(window)
+	update_status_border(window)
 end)
 
 -- True if sync is currently enabled for the given GUI window. Useful for
@@ -366,7 +402,7 @@ end
 -- Registered once at module load time (the plugin module is cached, so this
 -- does not accumulate duplicate handlers across config reloads).
 wezterm.on("update-status", function(window, _)
-	update_status(window)
+	update_status_bar(window)
 end)
 
 ---@param config Config

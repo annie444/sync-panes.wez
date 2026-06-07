@@ -41,10 +41,10 @@ install-tools:
     fi
     if [[ ! -d "{{ lua_env_path }}" ]]; then
         hererocks {{ lua_env_path }} --lua="{{ lua_version }}" --luarocks="{{ luarocks_version }}" {{ hererocks_flags }}
-        source {{ lua_env_path }}/bin/activate
-        luarocks install wezterm-types
-        luarocks install busted
     fi
+    source {{ lua_env_path }}/bin/activate
+    luarocks install wezterm-types
+    luarocks install busted
     if command -v cargo &>/dev/null; then
         if command -v cargo-binstall &>/dev/null; then
             cargo binstall selene
@@ -72,4 +72,6 @@ fmt:
 
 [group('Development')]
 test:
+    #!/usr/bin/env bash
+    source {{ lua_env_path }}/bin/activate
     busted

@@ -131,7 +131,6 @@ describe("sync-panes.wez", function()
 
 		it("does not override a user-customized SUPER+c binding", function()
 			local plugin = mock.load_plugin()
-			local action = { EmitEvent = "not-copy" }
 			local config = {
 				key_tables = {},
 				keys = {
