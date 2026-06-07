@@ -10,8 +10,8 @@ it on, type once, and the same input lands in all panes at the same time.
   `CTRL+SHIFT+E`).
 - **Status indicator** — an optional `⟳ SYNC` badge in the right status bar
   while sync is active.
-- **Border highlight** — optionally recolor the window border while sync is
-  active for a second, hard-to-miss visual cue.
+- **Border highlight** — optionally recolor the window border _and_ pane split
+  lines while sync is active for a second, hard-to-miss visual cue.
 - **Broadcasts everything you'd expect** — printable characters, `Ctrl`/`Alt`
   combinations, `Enter`/`Tab`/`Backspace`/`Escape`, arrow & navigation keys, and
   `F1`–`F12`.
@@ -63,9 +63,9 @@ is optional and falls back to the default below.
 | `toggle_mods`          | `"CTRL\|SHIFT"`       | Modifiers for the toggle key. Must not collide with a mirrored key (see [Caveats](#caveats)). |
 | `indicator`            | `true`                | Show the right-status indicator while sync is active. Set `false` to manage it yourself.      |
 | `status_text`          | `"⟳ SYNC"`            | Text shown in the indicator.                                                                  |
-| `indicator_ansi_color` | `"Red"`               | ANSI color name for the indicator text.                                                       |
-| `border`               | `false`               | Recolor the window border while sync is active. Set `true` to enable the highlight.           |
-| `border_ansi_color`    | `"Red"`               | ANSI color name for the border while sync is active (used when `border = true`).              |
+| `indicator_color`      | `"Red"`               | Color for the indicator text (ANSI color name or `#rrggbb` hex).                              |
+| `border`               | `false`               | Recolor the window border and pane splits while sync is active. Set `true` to enable.         |
+| `border_color`         | `"Red"`               | Color for the border and pane splits while sync is active (used when `border = true`).        |
 | `backspace`            | `"\127"`              | Byte(s) sent for Backspace. `0x7f` (DEL) is the common default; use `"\8"` for `^H`.          |
 
 ### Example
@@ -75,9 +75,9 @@ sync.apply_to_config(config, {
   toggle_key = "S",
   toggle_mods = "CTRL|SHIFT",
   status_text = "BROADCAST",
-  indicator_ansi_color = "Yellow",
+  indicator_color = "Yellow",
   border = true,
-  border_ansi_color = "Yellow",
+  border_color = "Yellow",
 })
 ```
 
