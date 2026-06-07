@@ -70,15 +70,14 @@ M._split = nil
 ---@type SyncPanesConfig
 local default_config = {
 	-- Name of the generated key table.
-	key_table_name = "synchronize_panes",
+	key_table_name = "sync_mode",
 	-- Key + modifiers that toggle synchronization on/off. This combination must
 	-- NOT be one of the mirrored keys (CTRL|SHIFT combos are never mirrored), so
 	-- that it falls through to toggle even while the sync table is active.
 	toggle_key = "E",
 	toggle_mods = "CTRL|SHIFT",
-	-- Show a right-status indicator while sync is active. Set to false if you
-	-- maintain your own status bar (then use M.is_synced(window) to integrate).
-	indicator = true,
+	-- Show a right-status indicator while sync is active.
+	indicator = false,
 	status_text = "⟳ SYNC",
 	indicator_color = "Red",
 	-- Changed the boarder color of the panes while sync is active.
