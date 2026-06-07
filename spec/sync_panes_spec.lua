@@ -131,15 +131,19 @@ describe("sync-panes.wez", function()
 
 		it("does not override a user-customized SUPER+c binding", function()
 			local plugin = mock.load_plugin()
+			local action = { EmitEvent = "not-copy" }
 			local config = {
 				key_tables = {},
 				keys = {
-					{ key = "c", mods = "SUPER", action = { EmitEvent = "not-copy" } },
+					{ key = "c", mods = "SUPER", action = action },
 				},
 			}
 			plugin.apply_to_config(config)
 			local b = mock.find_binding(config.key_tables[KT], "c", "SUPER")
-			assert.is_nil(b)
+			assert.is_not_nil(b)
+			assert.same(action, b.action)
+			assert.same("c", b.key)
+			assert.same("SUPER", b.mods)
 		end)
 	end)
 
