@@ -56,17 +56,17 @@ bar and every key you type is sent to all panes in the tab.
 Pass an options table as the second argument to `apply_to_config`. Every field
 is optional and falls back to the default below.
 
-| Option                 | Default               | Description                                                                                   |
-| ---------------------- | --------------------- | --------------------------------------------------------------------------------------------- |
-| `key_table_name`       | `"synchronize_panes"` | Name of the key table the plugin generates.                                                   |
-| `toggle_key`           | `"E"`                 | Key that toggles synchronization.                                                             |
-| `toggle_mods`          | `"CTRL\|SHIFT"`       | Modifiers for the toggle key. Must not collide with a mirrored key (see [Caveats](#caveats)). |
-| `indicator`            | `true`                | Show the right-status indicator while sync is active. Set `false` to manage it yourself.      |
-| `status_text`          | `"⟳ SYNC"`            | Text shown in the indicator.                                                                  |
-| `indicator_color`      | `"Red"`               | Color for the indicator text (ANSI color name or `#rrggbb` hex).                              |
-| `border`               | `false`               | Recolor the window border and pane splits while sync is active. Set `true` to enable.         |
-| `border_color`         | `"Red"`               | Color for the border and pane splits while sync is active (used when `border = true`).        |
-| `backspace`            | `"\127"`              | Byte(s) sent for Backspace. `0x7f` (DEL) is the common default; use `"\8"` for `^H`.          |
+| Option            | Default         | Description                                                                                   |
+| ----------------- | --------------- | --------------------------------------------------------------------------------------------- |
+| `key_table_name`  | `"sync_mode"`   | Name of the key table the plugin generates.                                                   |
+| `toggle_key`      | `"E"`           | Key that toggles synchronization.                                                             |
+| `toggle_mods`     | `"CTRL\|SHIFT"` | Modifiers for the toggle key. Must not collide with a mirrored key (see [Caveats](#caveats)). |
+| `indicator`       | `false`         | Show the right-status indicator while sync is active. Set `false` to manage it yourself.      |
+| `status_text`     | `"⟳ SYNC"`      | Text shown in the indicator.                                                                  |
+| `indicator_color` | `"Red"`         | Color for the indicator text (ANSI color name or `#rrggbb` hex).                              |
+| `border`          | `false`         | Recolor the window border and pane splits while sync is active. Set `true` to enable.         |
+| `border_color`    | `"Red"`         | Color for the border and pane splits while sync is active (used when `border = true`).        |
+| `backspace`       | `"\127"`        | Byte(s) sent for Backspace. `0x7f` (DEL) is the common default; use `"\8"` for `^H`.          |
 
 ### Example
 
@@ -75,6 +75,7 @@ sync.apply_to_config(config, {
   toggle_key = "S",
   toggle_mods = "CTRL|SHIFT",
   status_text = "BROADCAST",
+  indicator = true,
   indicator_color = "Yellow",
   border = true,
   border_color = "Yellow",
@@ -90,6 +91,57 @@ sync.apply_to_config(config, {
   including the pane you're typing in (so there's no double input).
 - Control sequences are broadcast too: pressing **`Ctrl+C`** while synced sends
   an interrupt to _all_ panes at once.
+
+## Integrating with tabline
+
+If you use [`tabline.wez`](https://github.com/michaelbrusegard/tabline.wez), you
+can show the sync state in tabline's status bar instead of the plugin's own
+right-status indicator — no extra wiring required. tabline's built-in `mode`
+component reads the active WezTerm key table, and this plugin's table is named
+`sync_mode`, so while sync is active the `mode` cell automatically displays
+**`SYNC`**.
+
+1. **Turn off the built-in indicator** so the two don't double up:
+
+   ```lua
+   sync.apply_to_config(config, { indicator = false })
+   ```
+
+2. **Add `'mode'` to a tabline section** (skip if it's already there):
+
+   ```lua
+   tabline.setup({
+     sections = { tabline_a = { 'mode' } },
+   })
+   ```
+
+3. **Color it** with tabline `theme_overrides`, keyed by the table name:
+
+   ```lua
+   tabline.setup({
+     options = {
+       theme_overrides = {
+         sync_mode = {
+           a = { fg = '#1e1e2e', bg = '#f38ba8' },
+           b = { fg = '#f38ba8', bg = '#313244' },
+           c = { fg = '#cdd6f4', bg = '#1e1e2e' },
+         },
+       },
+     },
+     sections = { tabline_a = { 'mode' } },
+   })
+   ```
+
+### Notes
+
+- **The table name must end in `_mode`.** tabline only treats a key table as a
+  "mode" when its name ends in `_mode`; otherwise the cell shows `NORMAL`. The
+  default `sync_mode` → `SYNC`. To change the label, rename the table while
+  keeping the suffix (e.g. `key_table_name = "broadcast_mode"` → `BROADCAST`) and
+  match the `theme_overrides` key to it.
+- **`status_text` and `indicator_color` don't apply here.** Those style the
+  plugin's own right-status indicator only — the tabline label comes from the key
+  table name and tabline's theme.
 
 ## API
 
