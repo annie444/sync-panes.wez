@@ -12,7 +12,7 @@
 -- Usage (in your wezterm.lua):
 --   local wezterm = require("wezterm")
 --   local config  = wezterm.config_builder()
---   local sync    = wezterm.plugin.require("https://github.com/<you>/wezterm-synchronize-panes")
+--   local sync    = wezterm.plugin.require("https://github.com/annie444/sync-panes.wez")
 --   sync.apply_to_config(config, {
 --     toggle_key  = "E",
 --     toggle_mods = "CTRL|SHIFT",
@@ -163,12 +163,21 @@ local function build_key_table(cfg, keys)
 		t[#t + 1] = { key = key, mods = mods, action = broadcast(text) }
 	end
 
+	local ignore_chars = {}
+	ignore_chars[0x7f] = true
+	ignore_chars[0x81] = true
+	ignore_chars[0x8d] = true
+	ignore_chars[0x8f] = true
+	ignore_chars[0x90] = true
+	ignore_chars[0x9d] = true
 	-- Printable ASCII (space .. '~'). With the default key_map_preference of
 	-- "Mapped", SHIFT is consumed by producing the character, so we match on the
 	-- literal produced character with no modifiers ("A", "!", "%", ...).
-	for code = 0x20, 0x7e do
-		local ch = string.char(code)
-		add(ch, nil, ch)
+	for code = 0x20, 0xff do
+		if ignore_chars[code] == nil then
+			local ch = string.char(code)
+			add(ch, nil, ch)
+		end
 	end
 
 	-- Named keys outside the printable range.
@@ -187,6 +196,7 @@ local function build_key_table(cfg, keys)
 
 	-- Alt/Meta + <letter>  ->  ESC-prefixed (readline meta bindings).
 	for code = string.byte("a"), string.byte("z") do
+		-- selene: allow(shadowing)
 		local ch = string.char(code)
 		add(ch, "ALT", "\27" .. ch)
 	end
@@ -343,7 +353,7 @@ local function update_status_bar(window)
 			{ Text = " " .. cfg.status_text .. " " },
 		}))
 	else
-		wezterm.emit("update-right-status")
+		wezterm.emit("update-status")
 	end
 end
 
@@ -409,6 +419,7 @@ M.toggle = wezterm.action_callback(function(window, pane)
 
 	update_status_bar(window)
 	update_status_border(window)
+	wezterm.emit("update-status", window, pane)
 end)
 
 -- True if sync is currently enabled for the given GUI window. Useful for
