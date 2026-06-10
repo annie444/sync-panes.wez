@@ -163,21 +163,12 @@ local function build_key_table(cfg, keys)
 		t[#t + 1] = { key = key, mods = mods, action = broadcast(text) }
 	end
 
-	local ignore_chars = {}
-	ignore_chars[0x7f] = true
-	ignore_chars[0x81] = true
-	ignore_chars[0x8d] = true
-	ignore_chars[0x8f] = true
-	ignore_chars[0x90] = true
-	ignore_chars[0x9d] = true
 	-- Printable ASCII (space .. '~'). With the default key_map_preference of
 	-- "Mapped", SHIFT is consumed by producing the character, so we match on the
 	-- literal produced character with no modifiers ("A", "!", "%", ...).
-	for code = 0x20, 0xff do
-		if ignore_chars[code] == nil then
-			local ch = string.char(code)
-			add(ch, nil, ch)
-		end
+	for code = 0x20, 0x7e do
+		local ch = string.char(code)
+		add(ch, nil, ch)
 	end
 
 	-- Named keys outside the printable range.
