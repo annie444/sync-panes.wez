@@ -58,6 +58,18 @@ describe("sync-panes.wez", function()
 			end
 		end)
 
+		it("mirrors a printable key+shift to every pane in the tab", function()
+			local b = mock.find_binding(key_table(), ":", "SHIFT")
+			assert.is_not_nil(b)
+
+			local panes = { mock.make_pane(), mock.make_pane(), mock.make_pane() }
+			b.action.__callback(mock.make_window(panes), panes[1])
+
+			for _, p in ipairs(panes) do
+				assert.same({ ":" }, p.sent)
+			end
+		end)
+
 		it("sends the control byte for Ctrl+<letter>", function()
 			-- Ctrl+C must interrupt all panes at once -> 0x03.
 			local b = mock.find_binding(key_table(), "c", "CTRL")
