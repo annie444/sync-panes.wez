@@ -186,5 +186,21 @@ describe("sync-panes.wez", function()
 			assert.equal(1, #window.performed)
 			assert.equal(KT, window.performed[1].action.ActivateKeyTable.name)
 		end)
+
+		it("emits update-status so tabline repaints on toggle", function()
+			local plugin, wezterm = mock.load_plugin()
+			local config = { keys = {}, key_tables = {} }
+			plugin.apply_to_config(config)
+
+			plugin.toggle.__callback(mock.make_window({ mock.make_pane() }, 9), mock.make_pane())
+
+			local saw = false
+			for _, e in ipairs(wezterm._emitted) do
+				if e == "update-status" then
+					saw = true
+				end
+			end
+			assert.is_true(saw)
+		end)
 	end)
 end)

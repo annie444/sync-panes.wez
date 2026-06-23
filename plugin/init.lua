@@ -12,7 +12,7 @@
 -- Usage (in your wezterm.lua):
 --   local wezterm = require("wezterm")
 --   local config  = wezterm.config_builder()
---   local sync    = wezterm.plugin.require("https://github.com/<you>/wezterm-synchronize-panes")
+--   local sync    = wezterm.plugin.require("https://github.com/annie444/sync-panes.wez")
 --   sync.apply_to_config(config, {
 --     toggle_key  = "E",
 --     toggle_mods = "CTRL|SHIFT",
@@ -188,6 +188,7 @@ local function build_key_table(cfg, keys)
 
 	-- Alt/Meta + <letter>  ->  ESC-prefixed (readline meta bindings).
 	for code = string.byte("a"), string.byte("z") do
+		-- selene: allow(shadowing)
 		local ch = string.char(code)
 		add(ch, "ALT", "\27" .. ch)
 	end
@@ -344,7 +345,7 @@ local function update_status_bar(window)
 			{ Text = " " .. cfg.status_text .. " " },
 		}))
 	else
-		wezterm.emit("update-right-status")
+		wezterm.emit("update-status")
 	end
 end
 
@@ -410,6 +411,7 @@ M.toggle = wezterm.action_callback(function(window, pane)
 
 	update_status_bar(window)
 	update_status_border(window)
+	wezterm.emit("update-status", window, pane)
 end)
 
 -- True if sync is currently enabled for the given GUI window. Useful for
