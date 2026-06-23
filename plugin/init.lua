@@ -356,7 +356,8 @@ local function update_status_border(window)
 	if is_enabled(window:window_id()) then
 		local run_cfg = window:effective_config()
 		M._win_frame = run_cfg.window_frame or {}
-		M._split = run_cfg.colors.split or ""
+		local colors = run_cfg.colors or {}
+		M._split = colors.split or ""
 		window:set_config_overrides({
 			colors = {
 				split = cfg.border_color or "#ab4444",
