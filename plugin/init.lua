@@ -339,13 +339,11 @@ local function update_status_bar(window)
 	end
 	if is_enabled(window:window_id()) then
 		window:set_right_status(wezterm.format({
-			{ Foreground = { AnsiColor = cfg.indicator_color or "Red" } },
+			{ Foreground = { AnsiColor = cfg.indicator_color or "#ab4444" } },
 			---@diagnostic disable-next-line: missing-fields
 			{ Attribute = { Intensity = "Bold" } },
 			{ Text = " " .. cfg.status_text .. " " },
 		}))
-	else
-		wezterm.emit("update-status")
 	end
 end
 
@@ -357,17 +355,17 @@ local function update_status_border(window)
 	end
 	if is_enabled(window:window_id()) then
 		local run_cfg = window:effective_config()
-		M._win_frame = run_cfg.window_frame
+		M._win_frame = run_cfg.window_frame or {}
 		M._split = run_cfg.colors.split or ""
 		window:set_config_overrides({
 			colors = {
-				split = cfg.border_color or "Red",
+				split = cfg.border_color or "#ab4444",
 			},
 			window_frame = {
-				border_left_color = cfg.border_color or "Red",
-				border_right_color = cfg.border_color or "Red",
-				border_bottom_color = cfg.border_color or "Red",
-				border_top_color = cfg.border_color or "Red",
+				border_left_color = cfg.border_color or "#ab4444",
+				border_right_color = cfg.border_color or "#ab4444",
+				border_bottom_color = cfg.border_color or "#ab4444",
+				border_top_color = cfg.border_color or "#ab4444",
 				border_left_width = M._win_frame.border_left_width or "0.5cell",
 				border_right_width = M._win_frame.border_right_width or "0.5cell",
 				border_bottom_height = M._win_frame.border_bottom_height or "0.25cell",
@@ -405,12 +403,13 @@ M.toggle = wezterm.action_callback(function(window, pane)
 			}),
 			pane
 		)
+		update_status_bar(window)
+		update_status_border(window)
 	else
 		window:perform_action("PopKeyTable", pane)
+		update_status_border(window)
 	end
 
-	update_status_bar(window)
-	update_status_border(window)
 	wezterm.emit("update-status", window, pane)
 end)
 
