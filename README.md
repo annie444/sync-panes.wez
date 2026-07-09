@@ -17,8 +17,10 @@ it on, type once, and the same input lands in all panes at the same time.
   `F1`–`F12`.
 - **Survives config reloads** — enabled state is stored in `wezterm.GLOBAL`, so
   reloading your config won't drop you out of sync mode.
+- **Layout-aware shift keys** — shifted punctuation is mirrored correctly for
+  US, UK, German, French, and Japanese keyboards, or supply your own set.
 - **Configurable** — change the toggle key, key-table name, indicator text and
-  color, the border highlight color, and the Backspace byte.
+  color, the border highlight color, the keyboard layout, and the Backspace byte.
 
 ## Requirements
 
@@ -56,17 +58,19 @@ bar and every key you type is sent to all panes in the tab.
 Pass an options table as the second argument to `apply_to_config`. Every field
 is optional and falls back to the default below.
 
-| Option            | Default         | Description                                                                                   |
-| ----------------- | --------------- | --------------------------------------------------------------------------------------------- |
-| `key_table_name`  | `"sync_mode"`   | Name of the key table the plugin generates.                                                   |
-| `toggle_key`      | `"E"`           | Key that toggles synchronization.                                                             |
-| `toggle_mods`     | `"CTRL\|SHIFT"` | Modifiers for the toggle key. Must not collide with a mirrored key (see [Caveats](#caveats)). |
-| `indicator`       | `false`         | Show the right-status indicator while sync is active. Set `false` to manage it yourself.      |
-| `status_text`     | `"⟳ SYNC"`      | Text shown in the indicator.                                                                  |
-| `indicator_color` | `"Red"`         | Color for the indicator text (ANSI color name or `#rrggbb` hex).                              |
-| `border`          | `false`         | Recolor the window border and pane splits while sync is active. Set `true` to enable.         |
-| `border_color`    | `"Red"`         | Color for the border and pane splits while sync is active (used when `border = true`).        |
-| `backspace`       | `"\127"`        | Byte(s) sent for Backspace. `0x7f` (DEL) is the common default; use `"\8"` for `^H`.          |
+| Option            | Default         | Description                                                                                                              |
+| ----------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `key_table_name`  | `"sync_mode"`   | Name of the key table the plugin generates.                                                                              |
+| `toggle_key`      | `"E"`           | Key that toggles synchronization.                                                                                        |
+| `toggle_mods`     | `"CTRL\|SHIFT"` | Modifiers for the toggle key. Must not collide with a mirrored key (see [Caveats](#caveats)).                            |
+| `indicator`       | `false`         | Show the right-status indicator while sync is active. Set `false` to manage it yourself.                                 |
+| `status_text`     | `"⟳ SYNC"`      | Text shown in the indicator.                                                                                             |
+| `indicator_color` | `"Red"`         | Color for the indicator text (ANSI color name or `#rrggbb` hex).                                                         |
+| `border`          | `false`         | Recolor the window border and pane splits while sync is active. Set `true` to enable.                                    |
+| `border_color`    | `"Red"`         | Color for the border and pane splits while sync is active (used when `border = true`).                                   |
+| `backspace`       | `"\127"`        | Byte(s) sent for Backspace. `0x7f` (DEL) is the common default; use `"\8"` for `^H`.                                     |
+| `keyboard_layout` | `"us"`          | Built-in layout whose shifted punctuation is mirrored: `"us"`, `"uk"`, `"de"`, `"fr"`, `"jp"`.                           |
+| `needs_shift`     | US punctuation  | Explicit list of characters that require SHIFT, overriding `keyboard_layout`. See [Keyboard layouts](#keyboard-layouts). |
 
 ### Example
 
@@ -79,6 +83,24 @@ sync.apply_to_config(config, {
   indicator_color = "Yellow",
   border = true,
   border_color = "Yellow",
+})
+```
+
+### Keyboard layouts
+
+To mirror shifted keys correctly, the plugin needs to know which characters
+require SHIFT on your keyboard. Built-in layouts cover the common cases:
+
+```lua
+sync.apply_to_config(config, { keyboard_layout = "de" }) -- us, uk, de, fr, jp
+```
+
+If your layout isn't listed (or is customized), pass `needs_shift` with the
+exact set of characters that need SHIFT. This overrides `keyboard_layout`:
+
+```lua
+sync.apply_to_config(config, {
+  needs_shift = { "!", "@", "#", "$", "%", "^", "&", "*", "(", ")" },
 })
 ```
 
