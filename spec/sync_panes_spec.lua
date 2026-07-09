@@ -203,4 +203,42 @@ describe("sync-panes.wez", function()
 			assert.is_true(saw)
 		end)
 	end)
+
+	describe("border", function()
+		it("restores window_frame/colors without an invalid empty split color", function()
+			local plugin = mock.load_plugin()
+			local config = { keys = {}, key_tables = {} }
+			plugin.apply_to_config(config, { border = true, border_color = "#ff0000" })
+
+			-- Simulate a user config that never set colors.split.
+			local window = mock.make_window({ mock.make_pane() }, 3, {
+				colors = {},
+				window_frame = { border_left_width = "1cell" },
+			})
+
+			plugin.toggle.__callback(window, mock.make_pane())
+			assert.equal("#ff0000", window.overrides.colors.split)
+
+			plugin.toggle.__callback(window, mock.make_pane())
+			-- Must not restore split to "" (invalid RgbaColor) when it was never set.
+			assert.is_nil(window.overrides.colors)
+			assert.equal("1cell", window.overrides.window_frame.border_left_width)
+		end)
+
+		it("restores a previously customized split color on toggle off", function()
+			local plugin = mock.load_plugin()
+			local config = { keys = {}, key_tables = {} }
+			plugin.apply_to_config(config, { border = true, border_color = "#ff0000" })
+
+			local window = mock.make_window({ mock.make_pane() }, 4, {
+				colors = { split = "#00ff00" },
+				window_frame = {},
+			})
+
+			plugin.toggle.__callback(window, mock.make_pane())
+			plugin.toggle.__callback(window, mock.make_pane())
+
+			assert.equal("#00ff00", window.overrides.colors.split)
+		end)
+	end)
 end)
