@@ -33,9 +33,10 @@ end
 -- A window owns one active tab containing `panes`, and records perform_action
 -- calls (used by the clipboard paste broadcast and the toggle action).
 ---@param panes table[]
----@param id integer|nil
+---@param id integer?
+---@param config table?
 ---@return table
-function M.make_window(panes, id)
+function M.make_window(panes, id, config)
 	local tab = {
 		panes = function()
 			return panes
@@ -45,6 +46,8 @@ function M.make_window(panes, id)
 		id = id or 1,
 		performed = {}, -- list of { action = ..., pane = ... }
 		right_status = nil,
+		config = config or {},
+		overrides = {},
 	}
 	function window:active_tab()
 		return tab
@@ -60,6 +63,14 @@ function M.make_window(panes, id)
 
 	function window:set_right_status(text)
 		self.right_status = text
+	end
+
+	function window:effective_config()
+		return self.config
+	end
+
+	function window:set_config_overrides(overrides)
+		self.overrides = overrides
 	end
 
 	return window

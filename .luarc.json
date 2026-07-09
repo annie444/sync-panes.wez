@@ -9,18 +9,32 @@
     "semicolon": "Disable"
   },
   "runtime": {
-    "path": ["?.lua", "?/init.lua"],
+    "path": [
+      "?.lua",
+      "?/init.lua"
+    ],
     "pathStrict": true,
     "version": "Lua 5.4"
   },
   "workspace": {
     "library": [
+      "/opt/homebrew/Cellar/neovim/0.12.3/share/nvim/runtime/lua",
+      "$HOME/.local/share/nvim/lazy/wezterm-types/lua",
       "lua54/share/lua/5.4",
       "lua54/share/lua/5.4/wezterm/types",
       "lua54/share/lua/5.4/busted",
-      "lua54/share/lua/5.4/luassert"
+      "lua54/share/lua/5.4/luassert",
+      "lua54/share/lua/5.4/cliargs",
+      "lua54/share/lua/5.4/luarocks",
+      "lua54/share/lua/5.4/pl",
+      "lua54/share/lua/5.4/say",
+      "lua54/share/lua/5.4/system",
+      "lua54/share/lua/5.4/term",
+      "lua54/share/lua/5.4/wezterm"
     ],
     "checkThirdParty": false,
-    "ignoreDir": ["/lua"]
+    "ignoreDir": [
+      "/lua"
+    ]
   }
 }
