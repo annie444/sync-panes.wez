@@ -4,3 +4,7 @@
 /.luarocks
 .remember/
 /lua54
+.headroom/
+.tokensave/
+.serena/
+.claude/
