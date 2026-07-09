@@ -30,6 +30,7 @@
 ---@field backspace string
 ---@field border boolean
 ---@field border_color string
+---@field needs_shift string[]
 
 ---@class SyncPanesConfigBuilder
 ---@field key_table_name string?
@@ -41,6 +42,8 @@
 ---@field backspace string?
 ---@field border boolean?
 ---@field border_color string?
+---@field keyboard_layout string?
+---@field needs_shift string[]?
 
 ---@type Wezterm
 local wezterm = require("wezterm")
@@ -53,6 +56,7 @@ local act = wezterm.action
 ---@field toggle { EmitEvent: string }
 ---@field is_synced fun(window: Window): boolean
 ---@field apply_to_config fun(config: Config, opts: SyncPanesConfigBuilder?): Config
+---@field _needs_shift table<string, string[]>
 local M = {}
 
 -- M._cfg is populated by apply_to_config and read at runtime by the toggle
@@ -66,6 +70,157 @@ M._win_frame = nil
 --- M._split is used to track the current split color for status updates, so we can
 --- trigger a refresh when the border color needs to change.
 M._split = nil
+
+M._needs_shift = {
+	["us"] = {
+		-- Row 1
+		"~",
+		"!",
+		"@",
+		"#",
+		"$",
+		"%",
+		"^",
+		"&",
+		"*",
+		"(",
+		")",
+		"_",
+		"+",
+		-- Row 2
+		"{",
+		"}",
+		"|",
+		-- Row 3
+		":",
+		'"',
+		-- Row 4
+		"<",
+		">",
+		"?",
+	},
+	["uk"] = {
+		-- Row 1
+		"¬",
+		"|",
+		"!",
+		'"',
+		"£",
+		"$",
+		"€",
+		"%",
+		"^",
+		"&",
+		"*",
+		"(",
+		")",
+		"_",
+		"+",
+		-- Row 2
+		"{",
+		"}",
+		-- Row 3
+		":",
+		"@",
+		"~",
+		-- Row 4
+		"<",
+		">",
+		"?",
+	},
+	["de"] = {
+		-- Row 1
+		"!",
+		'"',
+		"$",
+		"%",
+		"&",
+		"/",
+		"(",
+		")",
+		"=",
+		"?",
+		"{",
+		"[",
+		"]",
+		"}",
+		"\\",
+		-- Row 2
+		"@",
+		"€",
+		"*",
+		"~",
+		-- Row 3
+		"`",
+		-- Row 4
+		">",
+		"|",
+		":",
+		";",
+		"_",
+	},
+	["fr"] = {
+		-- Row 1
+		"1",
+		"2",
+		"3",
+		"4",
+		"5",
+		"6",
+		"7",
+		"8",
+		"9",
+		"0",
+		"+",
+		"~",
+		"#",
+		"{",
+		"[",
+		"|",
+		"`",
+		"\\",
+		"^",
+		"@",
+		"]",
+		"}",
+		-- Row 2
+		"£",
+		-- Row 3
+		"%",
+		-- Row 4
+		">",
+		"?",
+		".",
+		"/",
+	},
+	["jp"] = {
+		-- Row 1
+		"!",
+		'"',
+		"#",
+		"$",
+		"%",
+		"&",
+		"'",
+		"(",
+		")",
+		"=",
+		"~",
+		"|",
+		-- Row 2
+		"`",
+		"{",
+		-- Row 3
+		"+",
+		"*",
+		"}",
+		-- Row 4
+		"<",
+		">",
+		"?",
+		"_",
+	},
+}
 
 ---@type SyncPanesConfig
 local default_config = {
@@ -86,6 +241,7 @@ local default_config = {
 	-- Byte(s) sent for Backspace. 0x7f (DEL) is the common terminal default;
 	-- set to "\8" if your environment expects ^H.
 	backspace = "\127",
+	needs_shift = M._needs_shift["us"],
 }
 
 -- ---------------------------------------------------------------------------
@@ -172,7 +328,7 @@ local function build_key_table(cfg, keys)
 	-- one: SHIFT+";" is ":", never ";", so add(";", "SHIFT", ";") describes a
 	-- keystroke that doesn't exist and it shadows the real ":" binding.
 	local needs_shift = {}
-	for c in ('!@#$%^&*()_+{}|:"<>?~'):gmatch(".") do
+	for _, c in ipairs(M._cfg.needs_shift) do
 		needs_shift[c] = true
 	end
 	for code = 0x20, 0x7e do
@@ -456,6 +612,12 @@ function M.apply_to_config(config, opts)
 	end
 	for k, v in pairs(opts) do
 		cfg[k] = v
+	end
+	if opts.keyboard_layout then
+		cfg.needs_shift = M._needs_shift[opts.keyboard_layout]
+	end
+	if opts.needs_shift ~= nil then
+		cfg.needs_shift = opts.needs_shift
 	end
 	---@cast cfg SyncPanesConfig
 	M._cfg = cfg
