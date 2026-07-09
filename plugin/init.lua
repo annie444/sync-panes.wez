@@ -357,7 +357,7 @@ local function update_status_border(window)
 		local run_cfg = window:effective_config()
 		M._win_frame = run_cfg.window_frame or {}
 		local colors = run_cfg.colors or {}
-		M._split = colors.split or ""
+		M._split = colors.split or nil
 		window:set_config_overrides({
 			colors = {
 				split = cfg.border_color or "#ab4444",
@@ -374,12 +374,11 @@ local function update_status_border(window)
 			},
 		})
 	else
-		window:set_config_overrides({
-			colors = {
-				split = M._split,
-			},
-			window_frame = M._win_frame,
-		})
+		local overrides = { window_frame = M._win_frame }
+		if M._split then
+			overrides.colors = { split = M._split }
+		end
+		window:set_config_overrides(overrides)
 	end
 end
 
