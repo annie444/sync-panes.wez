@@ -70,6 +70,27 @@ describe("sync-panes.wez", function()
 			end
 		end)
 
+		it("does not bind SHIFT on base glyphs (they'd shadow the shifted char)", function()
+			-- On a US layout SHIFT+";" is ":", never ";". A "{key=';', mods='SHIFT'}"
+			-- binding is a keystroke that can't happen and it shadows the real ":".
+			local kt = key_table()
+			for _, base in ipairs({ ";", "'", ",", ".", "[", "]", "=", "-", "`", "1", "a" }) do
+				assert.is_nil(mock.find_binding(kt, base, "SHIFT"))
+			end
+		end)
+
+		it("still mirrors a bare base glyph to every pane", function()
+			local b = mock.find_binding(key_table(), ";", nil)
+			assert.is_not_nil(b)
+
+			local panes = { mock.make_pane(), mock.make_pane() }
+			b.action.__callback(mock.make_window(panes), panes[1])
+
+			for _, p in ipairs(panes) do
+				assert.same({ ";" }, p.sent)
+			end
+		end)
+
 		it("sends the control byte for Ctrl+<letter>", function()
 			-- Ctrl+C must interrupt all panes at once -> 0x03.
 			local b = mock.find_binding(key_table(), "c", "CTRL")

@@ -164,12 +164,23 @@ local function build_key_table(cfg, keys)
 	end
 
 	-- Printable ASCII (space .. '~'). With the default key_map_preference of
-	-- "Mapped", SHIFT is consumed by producing the character, so we match on the
-	-- literal produced character with no modifiers and shift ("A", "!", "%", ...).
+	-- "Mapped", we match on the literal produced character ("A", "!", "%", ...).
+	--
+	-- A SHIFT-modified binding is added ONLY for glyphs that require shift to type
+	-- on a US layout (uppercase letters + shifted punctuation) -- those can appear
+	-- with SHIFT still attached to the mapped character. A base glyph must NOT get
+	-- one: SHIFT+";" is ":", never ";", so add(";", "SHIFT", ";") describes a
+	-- keystroke that doesn't exist and it shadows the real ":" binding.
+	local needs_shift = {}
+	for c in ('!@#$%^&*()_+{}|:"<>?~'):gmatch(".") do
+		needs_shift[c] = true
+	end
 	for code = 0x20, 0x7e do
 		local ch = string.char(code)
 		add(ch, nil, ch)
-		add(ch, "SHIFT", ch)
+		if needs_shift[ch] or (code >= 0x41 and code <= 0x5a) then
+			add(ch, "SHIFT", ch)
+		end
 	end
 
 	-- Named keys outside the printable range.
